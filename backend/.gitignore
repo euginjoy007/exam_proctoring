@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+proctoring.db
+.env
+venv/

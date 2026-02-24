@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Permissions Check | ExamGuard AI</title>
+  <link rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<div class="permissions">
+  <header class="permissions__header">
+    <div>
+      <h1>System Check</h1>
+      <p>Hi {{ user }}, confirm your permissions before starting the exam.</p>
+      {% if exam %}
+        <p class="muted">Exam: {{ exam[1] or "Exam" }} ({{ exam[0] }})</p>
+      {% endif %}
+    </div>
+    <a href="/student-dashboard" class="link-muted">Back to dashboard</a>
+  </header>
+
+  {% if message %}
+    <div class="alert">{{ message }}</div>
+  {% endif %}
+
+  <section class="permissions__grid">
+    <div class="permission-card">
+      <h3>Camera Access</h3>
+      <p>We need to verify your webcam for AI proctoring.</p>
+      <button type="button" onclick="requestPermission('camera')">Allow Camera</button>
+      <p id="camera-status" class="status-text">Not granted</p>
+    </div>
+    <div class="permission-card">
+      <h3>Microphone Access</h3>
+      <p>Enable microphone access to monitor audio activity.</p>
+      <button type="button" onclick="requestPermission('microphone')">Allow Microphone</button>
+      <p id="microphone-status" class="status-text">Not granted</p>
+    </div>
+    <div class="permission-card">
+      <h3>Screen Sharing</h3>
+      <p>Share your screen so we can confirm your exam window.</p>
+      <button type="button" onclick="requestPermission('screen')">Share Screen</button>
+      <p id="screen-status" class="status-text">Not shared</p>
+    </div>
+  </section>
+
+  <section class="proctor-preview-card">
+    <h3>Camera Preview</h3>
+    <div class="proctor-preview">
+      <video id="proctorVideo" autoplay muted playsinline></video>
+      <div class="proctor-overlay">
+        <span id="centerMessage">Center your face inside the frame</span>
+      </div>
+    </div>
+  </section>
+
+  <form class="honor-code" method="POST" action="/start-exam">
+    <h2>Honor Code</h2>
+    <p>
+      By signing below, I agree to complete this assessment honestly without external assistance,
+      and understand that proctoring tools will monitor my activity.
+    </p>
+
+    <section class="exam-readiness">
+      <h3>Automated Device Checks</h3>
+      <p class="muted">Run checks below. Exam starts only when both checks pass.</p>
+
+      <div class="exam-readiness__grid">
+        <div class="exam-readiness__card">
+          <h4>Background App Check</h4>
+          <p class="muted small">Shows a checklist popup to close background apps, then verifies exam tab remains active. Browsers cannot force-close system apps.</p>
+          <button type="button" onclick="runFocusCheck()">Run Background App Check</button>
+          <p id="focus-check-status" class="status-text">Not verified</p>
+        </div>
+
+        <div class="exam-readiness__card">
+          <h4>Headphone / Speaker Check</h4>
+          <p class="muted small">Scans connected audio output devices and blocks known external devices.</p>
+          <button type="button" onclick="scanAudioOutputs()">Scan Audio Devices</button>
+          <p id="audio-check-status" class="status-text">Not verified</p>
+        </div>
+      </div>
+    </section>
+
+    <label for="signature">Type your full name to sign</label>
+    <input id="signature" name="signature" placeholder="Full Name" required>
+    <input type="hidden" id="focus_check_verified" name="focus_check_verified" value="false">
+    <input type="hidden" id="audio_check_verified" name="audio_check_verified" value="false">
+    <button type="submit" id="start-exam" disabled>Start Exam</button>
+  </form>
+</div>
+
+<script>
+  let screenStreamRef = null;
+  const permissionState = {
+    camera: false,
+    microphone: false,
+    screen: false,
+  };
+
+  const readinessState = {
+    focus: false,
+    audio: false,
+  };
+
+  function updateStatus(type, granted) {
+    permissionState[type] = granted;
+    const statusEl = document.getElementById(`${type}-status`);
+    statusEl.textContent = granted ? "Granted" : "Not granted";
+    statusEl.classList.toggle("status-text--ok", granted);
+    updateStartButton();
+  }
+
+  function updateStartButton() {
+    const signature = document.getElementById("signature").value.trim();
+    const allGranted = Object.values(permissionState).every(Boolean);
+    const readinessOk = readinessState.focus && readinessState.audio;
+
+    if (allGranted) {
+      localStorage.setItem("proctorPermissionsReady", "true");
+    } else {
+      localStorage.removeItem("proctorPermissionsReady");
+    }
+
+    document.getElementById("focus_check_verified").value = readinessState.focus ? "true" : "false";
+    document.getElementById("audio_check_verified").value = readinessState.audio ? "true" : "false";
+    document.getElementById("start-exam").disabled = !(allGranted && readinessOk && signature);
+  }
+
+  function setReadiness(type, passed, text) {
+    readinessState[type] = passed;
+    const el = document.getElementById(type === "focus" ? "focus-check-status" : "audio-check-status");
+    el.textContent = text;
+    el.classList.toggle("status-text--ok", passed);
+    updateStartButton();
+  }
+
+  async function requestPermission(type) {
+    try {
+      if (type === "screen") {
+        const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+        screenStreamRef = screenStream;
+        const track = screenStream.getVideoTracks()[0];
+        const settings = track?.getSettings?.() || {};
+        const displaySurface = settings.displaySurface;
+        if (displaySurface && displaySurface !== "monitor") {
+          setReadiness("focus", false, "Share entire screen (not tab/window only)");
+        }
+        if (track) {
+          track.onended = () => {
+            permissionState.screen = false;
+            updateStatus("screen", false);
+            setReadiness("focus", false, "Screen sharing stopped");
+          };
+        }
+      } else {
+        const constraints = type === "camera" ? { video: true } : { audio: true };
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        if (type === "camera") {
+          attachPreview(stream);
+          localStorage.setItem("proctorPermissionsReady", "true");
+        }
+      }
+      updateStatus(type, true);
+    } catch (error) {
+      updateStatus(type, false);
+    }
+  }
+
+  async function runFocusCheck() {
+    if (!permissionState.screen) {
+      setReadiness("focus", false, "Grant screen share first");
+      return;
+    }
+
+    const proceed = window.confirm(
+      "Before continuing, close all background apps and unrelated tabs.\n\n"
+      + "Click OK only after you close them."
+    );
+
+    if (!proceed) {
+      setReadiness("focus", false, "Please close background apps, then run check again");
+      return;
+    }
+
+    if (document.hidden) {
+      setReadiness("focus", false, "Exam tab not active");
+      return;
+    }
+
+    // 3-second active-tab stability check
+    setReadiness("focus", false, "Checking active tab stability...");
+    const startedAt = Date.now();
+    const monitor = setInterval(() => {
+      if (document.hidden) {
+        clearInterval(monitor);
+        setReadiness("focus", false, "Tab focus lost during check");
+        return;
+      }
+      if (Date.now() - startedAt >= 3000) {
+        clearInterval(monitor);
+        setReadiness("focus", true, "Verified");
+      }
+    }, 300);
+  }
+
+  async function scanAudioOutputs() {
+    try {
+      // Ensure labels are available
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const outputs = devices.filter((d) => d.kind === "audiooutput");
+
+      const externalPattern = /(headphone|headset|earbud|ear phone|airpods|bluetooth|hands[- ]?free|wireless speaker|external speaker)/i;
+      const external = outputs.filter((d) => externalPattern.test(d.label || ""));
+
+      if (external.length > 0) {
+        setReadiness("audio", false, `External audio device detected (${external[0].label || "unknown"})`);
+      } else {
+        setReadiness("audio", true, "Verified");
+      }
+    } catch (_error) {
+      setReadiness("audio", false, "Unable to scan devices. Allow microphone first.");
+    }
+  }
+
+  function attachPreview(stream) {
+    const video = document.getElementById("proctorVideo");
+    if (!video) return;
+    video.srcObject = stream;
+    video.play();
+  }
+
+  function updateCenteringHint(violationsList) {
+    const message = document.getElementById("centerMessage");
+    if (!message) return;
+    if (violationsList.includes("no_face")) {
+      message.textContent = "No face detected - center yourself";
+    } else if (violationsList.includes("multiple_faces")) {
+      message.textContent = "Multiple faces detected";
+    } else {
+      message.textContent = "Face centered";
+    }
+  }
+
+  document.getElementById("signature").addEventListener("input", updateStartButton);
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      setReadiness("focus", false, "Exam tab not active");
+    }
+  });
+</script>
+
+</body>
+</html>

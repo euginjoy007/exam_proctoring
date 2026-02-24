@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Exam | ExamGuard AI</title>
+
+  <link rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}">
+
+  <script defer src="{{ url_for('static', filename='js/timer.js') }}"></script>
+  <script defer src="{{ url_for('static', filename='js/proctor.js') }}"></script>
+</head>
+
+<body class="exam-page">
+
+<div class="container">
+  <div class="card" style="width:700px;">
+
+    <h2>Online Exam</h2>
+    <div class="proctor-status">
+      <span>Proctoring: <strong id="proctorStatus">Complete permissions to start</strong></span>
+      <span>Violations: <strong id="violationCount">0</strong></span>
+    </div>
+
+    <div class="exam-preview">
+      <div class="proctor-preview proctor-preview--floating">
+        <video id="proctorVideo" autoplay muted playsinline></video>
+        <canvas id="proctorCanvas"></canvas>
+        <div class="proctor-overlay">
+          <span id="centerMessage">Center your face inside the frame</span>
+        </div>
+        <div class="proctor-violation" id="violationBanner">No violations detected</div>
+      </div>
+    </div>
+
+    <h3 id="timer">Time Left: 05:00</h3>
+
+    <form method="POST" id="examForm">
+
+      {% for q in questions %}
+        <div class="exam-question">
+          <p><b>{{ loop.index }}. {{ q[1] }}</b></p>
+
+          <label class="exam-option">
+            <input type="radio" name="{{ q[0] }}" value="{{ q[2] }}" required>
+            <span>{{ q[2] }}</span>
+          </label>
+
+          <label class="exam-option">
+            <input type="radio" name="{{ q[0] }}" value="{{ q[3] }}">
+            <span>{{ q[3] }}</span>
+          </label>
+
+          <label class="exam-option">
+            <input type="radio" name="{{ q[0] }}" value="{{ q[4] }}">
+            <span>{{ q[4] }}</span>
+          </label>
+
+          <label class="exam-option">
+            <input type="radio" name="{{ q[0] }}" value="{{ q[5] }}">
+            <span>{{ q[5] }}</span>
+          </label>
+        </div>
+      {% endfor %}
+
+      <button type="submit">Submit Exam</button>
+
+    </form>
+
+  </div>
+</div>
+
+<div id="proctorDebug"
+     style="
+       position: fixed;
+       bottom: 20px;
+       left: 20px;
+       background: rgba(0,0,0,0.8);
+       color: white;
+       padding: 10px 14px;
+       font-size: 13px;
+       border-radius: 10px;
+       z-index: 9999;
+       font-family: monospace;
+     ">
+  Proctor: Starting...
+</div>
+
+</body>
+</html>

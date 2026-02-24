@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Student Login | ExamGuard AI</title>
+  <link rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<div class="container">
+  <div class="card">
+    <h2>ExamGuard AI</h2>
+    <p>Student Examination Portal</p>
+
+    <form method="POST">
+      <input name="username" placeholder="Student Username" required>
+      <input name="password" type="password" placeholder="Password" required>
+      <button type="submit">Student Login</button>
+    </form>
+
+    <a href="/register">New Student? Register</a>
+    <a href="/admin-login">Admin Login →</a>
+  </div>
+</div>
+
+</body>
+</html>
