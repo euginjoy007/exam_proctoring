@@ -2,25 +2,46 @@
 <html>
 <head>
   <title>Student Login | ExamGuard AI</title>
-  <link rel="stylesheet"
-        href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
 
-<div class="container">
-  <div class="card">
-    <h2>ExamGuard AI</h2>
-    <p>Student Examination Portal</p>
+<div class="landing-shell">
+  <div class="landing-overlay"></div>
 
-    <form method="POST">
-      <input name="username" placeholder="Student Username" required>
-      <input name="password" type="password" placeholder="Password" required>
-      <button type="submit">Student Login</button>
+  <section class="landing-hero">
+    <div class="hero-card">
+      <p class="hero-badge">ExamGuard AI • Proctoring Platform</p>
+      <h1>Welcome to Secure Online Exam Proctoring</h1>
+      <p>
+        Monitor candidates with AI-powered face, focus, and phone detection.
+        Built for universities, certification providers, and remote assessments.
+      </p>
+      <div class="hero-stats">
+        <span>🎥 Live camera monitoring</span>
+        <span>🧠 AI violation detection</span>
+        <span>🛡️ Integrity-first exam sessions</span>
+      </div>
+    </div>
+  </section>
+
+  <aside class="login-panel">
+    <h2>Student Access</h2>
+    <p>Enter your credentials to begin a verified exam session.</p>
+
+    <form method="POST" class="login-form-modern">
+      <label>Student Username</label>
+      <input name="username" placeholder="e.g. st_2026_0142" required>
+
+      <label>Password</label>
+      <input name="password" type="password" placeholder="Enter password" required>
+
+      <button type="submit">Start Secure Exam</button>
     </form>
 
-    <a href="/register">New Student? Register</a>
+    <a href="/register">New student? Create account</a>
     <a href="/admin-login">Admin Login →</a>
-  </div>
+  </aside>
 </div>
 
 </body>

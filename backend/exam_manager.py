@@ -1,10 +1,10 @@
-import sqlite3
+import database as db
 
 DB = "proctoring.db"
 
 # Load all questions for an exam code
 def get_exam_questions(exam_code):
-    conn = sqlite3.connect(DB)
+    conn = db.connect(DB)
     cur = conn.cursor()
 
     cur.execute("SELECT * FROM questions WHERE exam_code = ?", (exam_code,))
@@ -16,7 +16,7 @@ def get_exam_questions(exam_code):
 
 # Score calculation
 def calculate_score(form_data):
-    conn = sqlite3.connect(DB)
+    conn = db.connect(DB)
     cur = conn.cursor()
 
     score = 0

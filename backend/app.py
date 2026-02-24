@@ -1,4 +1,9 @@
-from flask import Flask, render_template, session, redirect
+
+
+
+### `backend/app.py`
+
+from flask import Flask, render_template, session, redirect, jsonify
 from database import init_db
 from auth import auth
 from flask import request
@@ -16,6 +21,116 @@ app.secret_key = "exam_secret"
 
 init_db()
 app.register_blueprint(auth)
+
+
+@app.route("/api/auth/login", methods=["POST"])
+def api_login():
+    payload = request.get_json() or {}
+    username = payload.get("username", "").strip()
+    password = payload.get("password", "").strip()
+    role = payload.get("role", "student").strip()
+
+    if not username or not password or role not in {"student", "admin"}:
+        return jsonify({"error": "Invalid credentials payload"}), 400
+
+    conn = sqlite3.connect("proctoring.db")
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT role FROM users WHERE username=? AND password=? AND role=?",
+        (username, password, role),
+    )
+    user = cur.fetchone()
+    conn.close()
+
+    if not user:
+        return jsonify({"error": "Incorrect username/password"}), 401
+
+    session["user"] = username
+    session["role"] = role
+    return jsonify({"ok": True, "user": username, "role": role})
+
+
+@app.route("/api/student/dashboard", methods=["GET"])
+def api_student_dashboard():
+    if "user" not in session or session.get("role") != "student":
+        return jsonify({"error": "Unauthorized"}), 403
+
+    conn = sqlite3.connect("proctoring.db")
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT exam_attempts.exam_code, exam_attempts.score, exam_attempts.timestamp
+        FROM exam_attempts
+        WHERE exam_attempts.user = ?
+        ORDER BY exam_attempts.timestamp DESC
+        """,
+        (session["user"],),
+    )
+    attempts = [
+        {"exam_code": row[0], "score": row[1], "timestamp": row[2]}
+        for row in cur.fetchall()
+    ]
+
+    selected_exam = None
+    if session.get("selected_exam"):
+        cur.execute(
+            "SELECT exam_code, title, description FROM exams WHERE exam_code = ?",
+            (session["selected_exam"],),
+        )
+        row = cur.fetchone()
+        if row:
+            selected_exam = {"exam_code": row[0], "title": row[1], "description": row[2]}
+    conn.close()
+
+    return jsonify({"user": session["user"], "attempts": attempts, "selected_exam": selected_exam})
+
+
+@app.route("/api/student/search-exam", methods=["POST"])
+def api_search_exam():
+    if "user" not in session or session.get("role") != "student":
+        return jsonify({"error": "Unauthorized"}), 403
+
+    payload = request.get_json() or {}
+    exam_code = payload.get("exam_code", "").strip().upper()
+    if not exam_code:
+        return jsonify({"error": "Exam code required"}), 400
+
+    conn = sqlite3.connect("proctoring.db")
+    cur = conn.cursor()
+    cur.execute("SELECT exam_code FROM exams WHERE exam_code = ?", (exam_code,))
+    exists = cur.fetchone()
+    conn.close()
+    if not exists:
+        return jsonify({"error": "Exam not found"}), 404
+
+    session["selected_exam"] = exam_code
+    return jsonify({"ok": True, "exam_code": exam_code})
+
+
+@app.route("/api/admin/dashboard", methods=["GET"])
+def api_admin_dashboard():
+    if "user" not in session or session.get("role") != "admin":
+        return jsonify({"error": "Unauthorized"}), 403
+
+    conn = sqlite3.connect("proctoring.db")
+    cur = conn.cursor()
+    cur.execute("SELECT exam_code, title FROM exams ORDER BY id DESC")
+    exams = [{"exam_code": row[0], "title": row[1]} for row in cur.fetchall()]
+
+    cur.execute(
+        """
+        SELECT users.username, COUNT(exam_attempts.id) AS attempts
+        FROM users
+        LEFT JOIN exam_attempts ON users.username = exam_attempts.user
+        WHERE users.role = 'student'
+        GROUP BY users.username
+        ORDER BY users.username
+        """
+    )
+    students = [{"username": row[0], "attempts": row[1], "risk_score": 0} for row in cur.fetchall()]
+    conn.close()
+
+    return jsonify({"students": students, "exams": exams})
 
 
 # ✅ Student Dashboard

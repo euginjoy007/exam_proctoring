@@ -2,24 +2,45 @@
 <html>
 <head>
   <title>Admin Login | ExamGuard AI</title>
-  <link rel="stylesheet"
-        href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
 
-<div class="container">
-  <div class="card">
-    <h2>ExamGuard AI</h2>
-    <p>Administrator Control Panel</p>
+<div class="landing-shell">
+  <div class="landing-overlay"></div>
 
-    <form method="POST">
-      <input name="username" placeholder="Admin Username" required>
-      <input name="password" type="password" placeholder="Admin Password" required>
-      <button type="submit">Admin Login</button>
+  <section class="landing-hero">
+    <div class="hero-card">
+      <p class="hero-badge">ExamGuard AI • Admin Console</p>
+      <h1>Control Exam Integrity in Real Time</h1>
+      <p>
+        Review attempts, monitor proctoring violations, and manage exam rooms
+        from one secure command center.
+      </p>
+      <div class="hero-stats">
+        <span>📊 Risk scoring dashboard</span>
+        <span>📸 Violation snapshots</span>
+        <span>📝 Exam & question management</span>
+      </div>
+    </div>
+  </section>
+
+  <aside class="login-panel">
+    <h2>Administrator Login</h2>
+    <p>Authenticate to access monitoring and exam management tools.</p>
+
+    <form method="POST" class="login-form-modern">
+      <label>Admin Username</label>
+      <input name="username" placeholder="admin" required>
+
+      <label>Admin Password</label>
+      <input name="password" type="password" placeholder="Enter secure password" required>
+
+      <button type="submit">Open Admin Console</button>
     </form>
 
     <a href="/">← Back to Student Login</a>
-  </div>
+  </aside>
 </div>
 
 </body>

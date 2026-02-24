@@ -4,3 +4,5 @@ mediapipe
 numpy
 ultralytics
 reportlab
+
+psycopg2-binary

@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, session
-import sqlite3
+import database as db
 
 auth = Blueprint("auth", __name__)
 
@@ -10,7 +10,7 @@ def student_login():
         u = request.form["username"]
         p = request.form["password"]
 
-        conn = sqlite3.connect("proctoring.db")
+        conn = db.connect("proctoring.db")
         cur = conn.cursor()
 
         cur.execute("""
@@ -36,7 +36,7 @@ def admin_login():
         u = request.form["username"]
         p = request.form["password"]
 
-        conn = sqlite3.connect("proctoring.db")
+        conn = db.connect("proctoring.db")
         cur = conn.cursor()
 
         cur.execute("""
@@ -62,7 +62,7 @@ def register():
         u = request.form["username"]
         p = request.form["password"]
 
-        conn = sqlite3.connect("proctoring.db")
+        conn = db.connect("proctoring.db")
         cur = conn.cursor()
 
         cur.execute("""
