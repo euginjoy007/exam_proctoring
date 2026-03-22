@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Student Dashboard | ExamGuard AI</title>
+  <link rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<div class="dashboard">
+  <header class="dashboard__header">
+    <div>
+      <p class="dashboard__date">{{ date_str }}</p>
+      <h1>Welcome, {{ user | upper }}</h1>
+      <p class="dashboard__subtitle">Search for your exam code to begin.</p>
+    </div>
+    <div class="dashboard__actions">
+      <form class="search-bar" method="POST" action="/search-exam">
+        <input type="text" name="exam_code" placeholder="Enter Exam ID" required>
+        <button type="submit">Search</button>
+      </form>
+      <a href="/logout" class="link-muted">Logout</a>
+    </div>
+  </header>
+
+  {% if message %}
+    <div class="alert">{{ message }}</div>
+  {% endif %}
+
+  {% if selected_exam %}
+    <section class="exam-card">
+      <div>
+        <h2>{{ selected_exam[1] or "Exam" }} ({{ selected_exam[0] }})</h2>
+        <p>{{ selected_exam[2] or "Review your exam details and confirm readiness." }}</p>
+      </div>
+      {% if selected_exam_attempted %}
+        <button type="button" disabled>Already Attempted</button>
+      {% else %}
+        <a href="/permissions"><button>Start Exam</button></a>
+      {% endif %}
+    </section>
+  {% else %}
+    <section class="exam-card exam-card--empty">
+      <div>
+        <h2>No exam selected</h2>
+        <p>Search by exam ID to load the correct exam.</p>
+      </div>
+    </section>
+  {% endif %}
+
+  <section class="past-drives">
+    <h3>Past Attempts</h3>
+    {% if attempts %}
+      <div class="attempt-grid">
+        {% for attempt in attempts %}
+          <div class="attempt-card">
+            <div>
+              <h4>{{ attempt[1] or "Exam" }} ({{ attempt[0] }})</h4>
+              <p>Score: {{ attempt[2] }} | {{ attempt[3] }}</p>
+            </div>
+            <span class="status-pill">Completed</span>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="muted">No past attempts yet.</p>
+    {% endif %}
+  </section>
+</div>
+
+</body>
+</html>

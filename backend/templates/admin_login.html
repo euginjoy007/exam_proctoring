@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Login | ExamGuard AI</title>
+  <link rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<div class="container">
+  <div class="card">
+    <h2>ExamGuard AI</h2>
+    <p>Administrator Control Panel</p>
+
+    <form method="POST">
+      <input name="username" placeholder="Admin Username" required>
+      <input name="password" type="password" placeholder="Admin Password" required>
+      <button type="submit">Admin Login</button>
+    </form>
+
+    <a href="/">← Back to Student Login</a>
+  </div>
+</div>
+
+</body>
+</html>

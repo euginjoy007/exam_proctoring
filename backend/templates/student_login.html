@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Login | ExamGuard AI</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/student_login.css') }}">
+</head>
+<body class="student-login-page">
+  <main class="student-login-stage" aria-label="Student login">
+    <div class="student-login-stage__tilt" aria-hidden="true"></div>
+
+    <section class="student-login-panel">
+      <div class="student-login-brand">ExamGuard <span>AI</span></div>
+      <h1>Welcome to ExamGuard Online</h1>
+      <p>
+        Secure, AI-powered proctoring for schools, universities, and certification
+        providers. Sign in to begin your exam session.
+      </p>
+
+      <form method="POST" class="student-login-form">
+        <label class="sr-only" for="username">Student Username</label>
+        <input id="username" name="username" type="text" placeholder="Student Username" autocomplete="username" required>
+
+        <label class="sr-only" for="password">Password</label>
+        <input id="password" name="password" type="password" placeholder="Password" autocomplete="current-password" required>
+
+        <button type="submit">Get Started</button>
+      </form>
+
+      <nav class="student-login-links" aria-label="Login links">
+        <a href="/register">New Student? Register</a>
+        <a href="/admin-login">Admin Login →</a>
+      </nav>
+    </section>
+
+    <section class="landing-section">
+      <h2>Why students trust ExamGuard</h2>
+      <div class="landing-grid">
+        <article class="landing-card">
+          <h3>Live AI Proctoring</h3>
+          <p>Continuously checks faces, background activity, and suspicious interruptions during the exam.</p>
+        </article>
+        <article class="landing-card">
+          <h3>Fast Setup</h3>
+          <p>Permissions and readiness checks are completed in one guided flow before the exam starts.</p>
+        </article>
+        <article class="landing-card">
+          <h3>Fair Assessment</h3>
+          <p>Single-candidate verification and audit logs help maintain integrity for every attempt.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="landing-section landing-section--stats">
+      <h2>Platform highlights</h2>
+      <div class="stats-grid">
+        <div><strong>24/7</strong><span>Monitoring availability</span></div>
+        <div><strong>3-Step</strong><span>Readiness check flow</span></div>
+        <div><strong>AI + Rules</strong><span>Hybrid fraud detection</span></div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

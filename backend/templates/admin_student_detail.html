@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Student Details | ExamGuard AI</title>
+  <link rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<div class="adm2-shell">
+  <aside class="adm2-sidebar">
+    <div class="adm2-brand">»</div>
+    <a class="adm2-nav-item" href="/admin-dashboard" title="Dashboard">🏛️</a>
+    <a class="adm2-nav-item active" href="#" title="Student Details">👤</a>
+    <a class="adm2-nav-item" href="#" title="Exams">📝</a>
+    <a class="adm2-nav-item" href="#" title="Reports">📊</a>
+  </aside>
+
+  <main class="adm2-main">
+    <header class="adm2-topbar">
+      <div>
+        <h1>Student Details</h1>
+        <p>{{ student }} — attempts and proctor violation history</p>
+      </div>
+      <div class="adm2-user">Hi, {{ session['user'] if session.get('user') else 'Admin' }}</div>
+    </header>
+
+    <section class="adm2-panel" style="margin-bottom: 16px;">
+      <div class="adm2-table-tools">
+        <strong>Exam Attempts</strong>
+      </div>
+      <div class="adm2-table-wrap">
+        <table class="adm2-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Exam</th>
+              <th>Exam Code</th>
+              <th>Score</th>
+              <th>Violations (Exam)</th>
+              <th>Timestamp</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if attempts %}
+              {% for attempt in attempts %}
+                {% set exam_code = attempt[0] or 'N/A' %}
+                <tr>
+                  <td>{{ loop.index }}</td>
+                  <td>{{ attempt[1] or "Exam" }}</td>
+                  <td>{{ exam_code }}</td>
+                  <td>{{ attempt[2] }}</td>
+                  <td>{{ violation_counts.get(exam_code, 0) }}</td>
+                  <td>{{ attempt[3] }}</td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="6" class="muted">No attempts recorded.</td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="adm2-panel">
+      <div class="adm2-table-tools">
+        <strong>Violation History</strong>
+        <label>Filter by Exam Code:
+          <select id="violationExamFilter">
+            <option value="all">All</option>
+            {% for attempt in attempts %}
+              {% if attempt[0] %}
+                <option value="{{ attempt[0] }}">{{ attempt[0] }}</option>
+              {% endif %}
+            {% endfor %}
+          </select>
+        </label>
+      </div>
+      <div class="adm2-table-wrap">
+        <table class="adm2-table" id="violationTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Violation Type</th>
+              <th>Exam Code</th>
+              <th>Screenshot</th>
+              <th>Timestamp</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if violations %}
+              {% for violation in violations %}
+                <tr>
+                  <td>{{ loop.index }}</td>
+                  <td>{{ violation[0] }}</td>
+                  <td data-exam-code="{{ violation[3] or 'N/A' }}">{{ violation[3] or "N/A" }}</td>
+                  <td>
+                    {% if violation[2] %}
+                      <a href="{{ violation[2] }}" target="_blank" rel="noopener">
+                        <img src="{{ violation[2] }}" alt="violation screenshot" style="width:64px;height:40px;object-fit:cover;border-radius:6px;border:1px solid #d1d5db;">
+                      </a>
+                    {% else %}
+                      <span class="muted">N/A</span>
+                    {% endif %}
+                  </td>
+                  <td>{{ violation[1] }}</td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="5" class="muted">No violations recorded.</td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <a href="/admin-dashboard" class="adm2-logout">← Back to dashboard</a>
+  </main>
+</div>
+
+<script>
+  const examFilter = document.getElementById('violationExamFilter');
+  const violationTable = document.getElementById('violationTable');
+
+  examFilter?.addEventListener('change', (e) => {
+    const selected = e.target.value;
+    const rows = violationTable?.querySelectorAll('tbody tr') || [];
+    rows.forEach((row) => {
+      const examCell = row.querySelector('td[data-exam-code]');
+      if (!examCell) return;
+      const code = examCell.dataset.examCode;
+      row.style.display = selected === 'all' || code === selected ? '' : 'none';
+    });
+  });
+</script>
+
+</body>
+</html>

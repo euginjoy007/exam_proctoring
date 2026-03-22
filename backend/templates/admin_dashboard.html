@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Dashboard | ExamGuard AI</title>
+  <link rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<div class="adm2-shell">
+  <aside class="adm2-sidebar">
+    <div class="adm2-brand">»</div>
+    <a class="adm2-nav-item active" href="#" title="Institutions">🏛️</a>
+    <a class="adm2-nav-item" href="#" title="Settings">⚙️</a>
+    <a class="adm2-nav-item" href="#" title="Exams">📝</a>
+    <a class="adm2-nav-item" href="#" title="Reports">📊</a>
+  </aside>
+
+  <main class="adm2-main">
+    <header class="adm2-topbar">
+      <div>
+        <h1>Institution Management</h1>
+        <p>Admin Workspace</p>
+      </div>
+      <div class="adm2-user">Hi, {{ session['user'] if session.get('user') else 'Admin' }}</div>
+    </header>
+
+    {% if message %}
+      <div class="alert">{{ message }}</div>
+    {% endif %}
+
+    <section class="adm2-panel">
+      <div class="adm2-panel-actions">
+        <button type="button" id="toggleCreate">+ Create Institution</button>
+      </div>
+
+      <div id="createForms" class="adm2-forms hidden">
+        <div class="adm2-form-card">
+          <h3>Create Exam</h3>
+          <form method="POST" action="/admin/exams">
+            <input name="exam_code" placeholder="Exam Code (e.g. AI101)" required>
+            <input name="title" placeholder="Exam Title" required>
+            <textarea name="description" placeholder="Exam Description"></textarea>
+            <button type="submit">Create Exam</button>
+          </form>
+        </div>
+
+        <div class="adm2-form-card">
+          <h3>Add Question</h3>
+          <form method="POST" action="/admin/questions">
+            <input name="exam_code" placeholder="Exam Code" required>
+            <textarea name="question" placeholder="Question text" required></textarea>
+            <input name="option1" placeholder="Option 1" required>
+            <input name="option2" placeholder="Option 2" required>
+            <input name="option3" placeholder="Option 3" required>
+            <input name="option4" placeholder="Option 4" required>
+            <input name="answer" placeholder="Correct Answer" required>
+            <button type="submit">Add Question</button>
+          </form>
+        </div>
+
+        <div class="adm2-form-card">
+          <h3>Upload CSV</h3>
+          <form method="POST" action="/admin/upload-form" enctype="multipart/form-data">
+            <input name="exam_code" placeholder="Exam Code" required>
+            <input type="file" name="form_file" accept=".csv" required>
+            <button type="submit">Upload</button>
+          </form>
+          <p class="muted small">Headers: question, option1, option2, option3, option4, answer</p>
+        </div>
+      </div>
+
+      <div class="adm2-table-tools">
+        <label>Show
+          <select>
+            <option>10</option>
+            <option>25</option>
+            <option>50</option>
+          </select>
+          entries
+        </label>
+        <label>Search:
+          <input id="studentSearch" type="text" placeholder="Search student">
+        </label>
+      </div>
+
+      <div class="adm2-table-wrap">
+        <table id="studentTable" class="adm2-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Student Name</th>
+              <th>Attempts</th>
+              <th>Last Attempt</th>
+              <th>Risk Score</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if students %}
+              {% for student in students %}
+                <tr>
+                  <td>{{ loop.index }}</td>
+                  <td>{{ student[0] }}</td>
+                  <td>{{ student[1] }}</td>
+                  <td>{{ student[2] or 'N/A' }}</td>
+                  <td>{{ risk_scores.get(student[0], 0) }}</td>
+                  <td class="adm2-actions">
+                    <a href="/admin/students/{{ student[0] }}" title="View">👁️</a>
+                    <a href="/admin/students/{{ student[0] }}" title="Edit">✏️</a>
+                    <span title="Delete">🗑️</span>
+                  </td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="6" class="muted">No student accounts found.</td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <a href="/logout" class="adm2-logout">Logout</a>
+  </main>
+</div>
+
+<script>
+  const toggleBtn = document.getElementById('toggleCreate');
+  const forms = document.getElementById('createForms');
+  const search = document.getElementById('studentSearch');
+  const table = document.getElementById('studentTable');
+
+  toggleBtn?.addEventListener('click', () => {
+    forms.classList.toggle('hidden');
+  });
+
+  search?.addEventListener('input', (e) => {
+    const q = e.target.value.toLowerCase();
+    [...table.querySelectorAll('tbody tr')].forEach((row) => {
+      const name = row.children[1]?.textContent?.toLowerCase() || '';
+      row.style.display = name.includes(q) ? '' : 'none';
+    });
+  });
+</script>
+
+</body>
+</html>
